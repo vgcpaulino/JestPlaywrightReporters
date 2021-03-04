@@ -1,9 +1,18 @@
 module.exports = {
     preset: 'jest-playwright-preset',
     reporters: [
-        'default'
+        'default',
+        ['jest-junit', {
+            suiteName: 'Sample Jest JUnit',
+            outputDirectory: './report',
+            outputName: 'junitReport.xml',
+            uniqueOutputName: 'true',
+            classNameTemplate: '{classname}-{title}',
+            titleTemplate: '{classname}-{title}',
+            ancestorSeparator: ' › ',
+            usePathForSuiteName: 'true'
+        }]
     ],
-    // testResultsProcessor: 'jest-junit',
-    // setupFiles: ['./hooks/jestSetup.js'],
+    setupFiles: ['./hooks/jestSetup.js'],
     setupFilesAfterEnv: ['./hooks/jestHooks.js']
 }

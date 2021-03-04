@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuites name="Sample Jest JUnit" tests="6" failures="2" errors="0" time="14.366">
+  <testsuite name="test\file2.test.js" errors="0" failures="1" skipped="0" timestamp="2021-03-04T18:53:45" time="6.737" tests="3">
+    <testcase classname="Suite 2-Test 1" name="Suite 2-Test 1" time="0.431">
+    </testcase>
+    <testcase classname="Suite 2-Test 2" name="Suite 2-Test 2" time="0.309">
+    </testcase>
+    <testcase classname="Suite 2-Test 3" name="Suite 2-Test 3" time="0.197">
+      <failure>TypeError: Cannot create property &apos;10&apos; on number &apos;1&apos;
+    at Object.test (C:\Source\GitHub\JestPlaywrightReporters\test\file2.test.js:22:9)
+    at Promise (C:\Source\GitHub\JestPlaywrightReporters\node_modules\jest-circus\build\utils.js:276:28)
+    at new Promise (&lt;anonymous&gt;)
+    at callAsyncCircusFn (C:\Source\GitHub\JestPlaywrightReporters\node_modules\jest-circus\build\utils.js:216:10)
+    at _callCircusTest (C:\Source\GitHub\JestPlaywrightReporters\node_modules\jest-circus\build\run.js:212:40)</failure>
+    </testcase>
+  </testsuite>
+  <testsuite name="test\file1.test.js" errors="0" failures="1" skipped="0" timestamp="2021-03-04T18:53:45" time="7.257" tests="3">
+    <testcase classname="Suite 1-Test 1" name="Suite 1-Test 1" time="0.406">
+    </testcase>
+    <testcase classname="Suite 1-Test 2" name="Suite 1-Test 2" time="0.228">
+    </testcase>
+    <testcase classname="Suite 1-Test 3" name="Suite 1-Test 3" time="0.519">
+      <failure>TypeError: Cannot create property &apos;10&apos; on number &apos;1&apos;
+    at Object.test (C:\Source\GitHub\JestPlaywrightReporters\test\file1.test.js:21:9)
+    at Promise (C:\Source\GitHub\JestPlaywrightReporters\node_modules\jest-circus\build\utils.js:276:28)
+    at new Promise (&lt;anonymous&gt;)
+    at callAsyncCircusFn (C:\Source\GitHub\JestPlaywrightReporters\node_modules\jest-circus\build\utils.js:216:10)
+    at _callCircusTest (C:\Source\GitHub\JestPlaywrightReporters\node_modules\jest-circus\build\run.js:212:40)</failure>
+    </testcase>
+  </testsuite>
+</testsuites>
