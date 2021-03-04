@@ -3,7 +3,6 @@ module.exports = {
     reporters: [
         'default'
     ],
-    // testResultsProcessor: 'jest-junit',
-    // setupFiles: ['./hooks/jestSetup.js'],
+    setupFiles: ['./hooks/jestSetup.js'],
     setupFilesAfterEnv: ['./hooks/jestHooks.js']
 }

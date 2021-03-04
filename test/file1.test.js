@@ -14,4 +14,11 @@ describe('Suite 1', () => {
         console.log('Test 2');
     });
 
+    test(`Test 3`, async () => {
+        console.log('Test 3');
+        // error
+        var a = 1;
+        a[10] = 1;
+    });
+
 });
