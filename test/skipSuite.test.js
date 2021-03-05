@@ -1,5 +1,5 @@
 
-describe('Suite 1', () => {
+describe.skip('Skipped Suite', () => {
 
     beforeEach(async () => {
         await page.goto('http://www.example.com');
