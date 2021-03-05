@@ -8,3 +8,7 @@ Each reporter/setup will be in a different branch. And, the master will be a "cl
 ### Jest-JUnit
 GitHub [link](https://github.com/jest-community/jest-junit)  
 Branch [link](https://github.com/vgcpaulino/JestPlaywrightReporters/tree/junit)  
+
+### Jest HTML Reporters
+GitHub [link](https://github.com/Hazyzh/jest-html-reporters)  
+Branch [link](https://github.com/vgcpaulino/JestPlaywrightReporters/tree/htmlReporters)  
