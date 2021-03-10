@@ -12,3 +12,7 @@ Branch [link](https://github.com/vgcpaulino/JestPlaywrightReporters/tree/junit)
 ### Jest HTML Reporters
 GitHub [link](https://github.com/Hazyzh/jest-html-reporters)  
 Branch [link](https://github.com/vgcpaulino/JestPlaywrightReporters/tree/htmlReporters)  
+
+### Jest Puppeteer Allure
+GitHub [link](https://github.com/nkyazhin/jest-puppeteer-allure)  
+Branch [link](https://github.com/vgcpaulino/JestPlaywrightReporters/tree/puppeteerAllure)  
