@@ -1,10 +1,9 @@
 
 module.exports = {
-    // browsers: ["chromium", "firefox", "webkit"],
-    browsers: ["chromium"],
+    browsers: ["chromium", "firefox", "webkit"],
     exitOnPageError: false,
     launchOptions: {
-        headless: false,
+        headless: true,
         viewport: null
     },
     skipInitialization: false
