@@ -16,3 +16,11 @@ Branch [link](https://github.com/vgcpaulino/JestPlaywrightReporters/tree/htmlRep
 ### Jest Puppeteer Allure
 GitHub [link](https://github.com/nkyazhin/jest-puppeteer-allure)  
 Branch [link](https://github.com/vgcpaulino/JestPlaywrightReporters/tree/puppeteerAllure)  
+
+### Jest Circus with Jest Playwright Preset, and Allure JS Common 
+GitHub [link](https://github.com/allure-framework/allure-js-commons)  
+Branch [link](https://github.com/vgcpaulino/JestPlaywrightReporters/tree/circusPlaywrightPresetAllure)
+
+Most of the packages that I've found to use Playwright within Allure require to use Jasmine as the test runner, and according to the Jest documentation, Jasmine will be removed in the further versions.
+
+To use Jest Circus, Jest Playwright Preset, and Allure I had to create a new CustomEnvironment and use the Allure Common to make it compatible.
