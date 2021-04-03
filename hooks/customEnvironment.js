@@ -1,7 +1,7 @@
 const PlaywrightEnvironment = require('jest-playwright-preset/lib/PlaywrightEnvironment').default;
-const { AllureRuntime } = require('allure-js-commons');
-const AllureReporter = require('../reporter/allureReporter').default;
 const { basename } = require('path');
+const { allureConfig } = require('../reporter/allure.config');
+const { getAllureReporter, initializeTestPath } = require('./customEnvironment.helper');
 
 class CustomEnvironment extends PlaywrightEnvironment {
 
@@ -9,43 +9,13 @@ class CustomEnvironment extends PlaywrightEnvironment {
     super(config);
 
     // Allure Setup;
-    this.testPath = this.initializeTestPath(config, context);
-    // this.testPath = "\\testY\\vinicius.test.js";
+    this.testPath = initializeTestPath(config, context);
     this.testFileName = basename(this.testPath);
-    this.reporter = this.initializeAllureReporter(config);
+
+    allureConfig.environmentInfo = config.testEnvironmentOptions["jest-playwright"].browsers;
+    // allureConfig.environmentInfo = parsedEnvironments;
+    this.reporter = getAllureReporter(allureConfig);
     this.global.allure = this.reporter.getImplementation();
-  }
-
-  initializeTestPath(config, context) {
-    let testPath = (context.testPath) ? context.testPath : '';
-
-    if (typeof config.testEnvironmentOptions.testPath === 'string') {
-      testPath = testPath.replace(config.testEnvironmentOptions.testPath, '');
-    }
-
-    if (typeof config.testEnvironmentOptions.testPath !== 'string') {
-      testPath = testPath.replace(config.rootDir, '');
-    }
-
-    if (testPath.startsWith('/')) {
-      testPath = testPath.slice(1);
-    }
-
-    return testPath;
-  }
-
-  initializeAllureReporter(config) {
-    const allureConfig = {
-      resultsDir: config.testEnvironmentOptions.resultsDir || 'allure-results'
-    }
-
-    return new AllureReporter({
-      allureRuntime: new AllureRuntime(allureConfig),
-      jiraUrl: 'https://jiraUrl.com/',
-      tmsUrl: 'https://tmsUrl.com/',
-      environmentInfo: config.testEnvironmentOptions.environmentInfo,
-      categories: ''
-    });
   }
 
   async setup() {
@@ -68,7 +38,6 @@ class CustomEnvironment extends PlaywrightEnvironment {
       case 'teardown':
       case 'error':
         break;
-
       case 'run_start':
         this.reporter.startTestFile(this.testFileName);
         break;

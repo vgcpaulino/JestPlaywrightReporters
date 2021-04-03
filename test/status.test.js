@@ -1,3 +1,4 @@
+const {ContentType} = require('../reporter/contentType');
 
 describe('Test Suite 1', () => {
 
@@ -12,6 +13,8 @@ describe('Test Suite 1', () => {
 
     test(`${browserName} - Test 2 - Passed`, async () => {
         console.log('Test 2');
+        allure.attachment('TEXT-attachment', 'line1\nline2\nline3\n', ContentType.TEXT);
+        
         expect(1).toBe(1);
     });
     

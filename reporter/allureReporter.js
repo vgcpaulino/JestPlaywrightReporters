@@ -1,20 +1,17 @@
-const os = require('os');
-const { LabelName, LinkType, Stage, Status } = require('allure-js-commons');
+
+const { LabelName, LinkType, Stage, Status, ContentType } = require('allure-js-commons');
 const JestAllureInterface = require('./allureInterface').default;
-const { ContentType } = require('./contentType');
-const { createHash } = require('crypto');
+
 const defaultCategories = require('./categories.allure').categories;
 const { parseWithComments } = require('jest-docblock');
-const stripAnsi = require('strip-ansi');
-const _ = require('lodash');
+
 const prettier = require('prettier/standalone');
 const parser = require('prettier/parser-typescript');
 
-// import type * as jest from '@jest/types'; // TO REMOVE
+const { AllureReporterHelper } = require('./allureReporter.helper').default;
 
-class AllureReporter {
+class AllureReporter extends AllureReporterHelper {
 
-	// ### Constructor
 	constructor({
 		allureRuntime = null,
 		jiraUrl = '',
@@ -22,7 +19,7 @@ class AllureReporter {
 		environmentInfo = '',
 		categories = ''
 	}) {
-
+		super(allureRuntime);
 		this.suites = [];
 		this.steps = [];
 		this.tests = [];
@@ -30,10 +27,15 @@ class AllureReporter {
 		this.allureRuntime = allureRuntime;
 		this.jiraUrl = jiraUrl;
 		this.tmsUrl = tmsUrl;
-		if (environmentInfo) {
-			this.allureRuntime.writeEnvironmentInfo(environmentInfo);
-		}
 
+		// TODO: Find another way to write the environment file, it does not accept arrays. So the overwrite the file.;
+		if (environmentInfo) {
+			var allEnvironments = this.generateEnvironmentObjectsArray(environmentInfo);
+			allEnvironments.forEach(env => {
+				this.allureRuntime.writeEnvironmentInfo(env);
+			});
+		}
+		
 		this.categories = defaultCategories;
 		this.allureRuntime.writeCategoriesDefinitions(this.categories);
 	}
@@ -83,9 +85,7 @@ class AllureReporter {
 	}
 
 	endSuite() {
-		if (this.currentSuite === null) {
-			throw new Error('endSuite called while no suite is running');
-		}
+		if (this.currentSuite === null) this.errorMessage('endSuite called while no suite is running');
 
 		if (this.steps.length > 0) {
 			this.steps.forEach(step => {
@@ -116,13 +116,10 @@ class AllureReporter {
 	}
 
 	endHook(error) {
-		if (this.currentExecutable === null) {
-			throw new Error('endHook called while no executable is running');
-		}
+		if (this.currentExecutable === null) this.errorMessage('The "endHook" function was called without running a executable.');
 
 		if (error) {
 			const { status, message, trace } = this.handleError(error);
-
 			this.currentExecutable.status = status;
 			this.currentExecutable.statusDetails = { message, trace };
 			this.currentExecutable.stage = Stage.FINISHED;
@@ -135,60 +132,44 @@ class AllureReporter {
 	}
 
 	startTestCase(test, state, testPath) {
-		if (this.currentSuite === null) {
-			throw new Error('startTestCase called while no suite is running');
-		}
+		if (this.currentSuite === null) this.errorMessage('The "startTestCase" function was called without a suite running.');
 
 		let currentTest = this.currentSuite.startTest(test.name);
 		currentTest.fullName = test.name;
-		currentTest.historyId = createHash('md5')
-			.update(testPath + '.' + test.name)
-			.digest('hex');
+		currentTest.historyId = this.getTestHash(testPath, test.name);
 		currentTest.stage = Stage.RUNNING;
-
+		
+		// TODO: Add conditional based on configuration file;
 		if (test.fn) {
-			const serializedTestCode = test.fn.toString();
-			const { code, comments, pragmas } = this.extractCodeDetails(serializedTestCode);
-
-			this.setAllureReportPragmas(currentTest, pragmas);
-
-			currentTest.description = `${comments}\n### Test\n\`\`\`typescript\n${code}\n\`\`\`\n`;
+			var file = this.writeAttachment(this.allureRuntime, test.fn.toString(), ContentType.TEXT);
+			currentTest.addAttachment('Test Code', ContentType.TEXT, file);
 		}
 
-		if (!test.fn) {
-			currentTest.description = '### Test\nCode is not available.\n';
+		// Adds the labels in the AllureTest object;	
+		var suiteGroup = {
+			subSuite:  test.parent.name,
+			suiteName: (test.parent.parent.name != 'ROOT_DESCRIBE_BLOCK') ? test.parent.parent.name : '',
+			parentSuite: (test.parent.parent.parent) ? ((test.parent.parent.parent.name != 'ROOT_DESCRIBE_BLOCK') ? test.parent.parent.parent.name : '') : ''
 		}
-
-		// if (state.parentProcessenv.JEST_WORKER_ID) {
-		// 	currentTest.addLabel(LabelName.THREAD, state.parentProcess.env.JEST_WORKER_ID);
-		// }
-
-		currentTest = this.addSuiteLabelsToTestCase(currentTest, testPath);
+		currentTest = this.addSuiteLabelsToAllureTest(currentTest, suiteGroup, testPath);
+		
+		// Add the AllureTest in the test list;
 		this.pushTest(currentTest);
 	}
 
 	passTestCase() {
-		if (this.currentTest === null) {
-			throw new Error('passTestCase called while no test is running');
-		}
-
+		if (this.currentTest === null) this.errorMessage('The "passTestCase" function was called wihtout a test running.');
 		this.currentTest.status = Status.PASSED;
 	}
 
 	pendingTestCase(test) {
-		if (this.currentTest === null) {
-			throw new Error('pendingTestCase called while no test is running');
-		}
-
+		if (this.currentTest === null) this.errorMessage('The "pendingTestCase" function was called without a test running.');
 		this.currentTest.status = Status.SKIPPED;
 		this.currentTest.statusDetails = { message: `Test is marked: "${test.mode}"` };
 	}
 
 	failTestCase(error) {
-		if (this.currentTest === null) {
-			throw new Error('failTestCase called while no test is running');
-		}
-
+		if (this.currentTest === null) this.errorMessage('The "failTestCase" function was called without a test running.');
 		const latestStatus = this.currentTest.status;
 
 		// If test already has a failed/broken state, we should not overwrite it
@@ -198,25 +179,16 @@ class AllureReporter {
 		}
 
 		const { status, message, trace } = this.handleError(error);
-
 		this.currentTest.status = status;
 		this.currentTest.statusDetails = { message, trace };
 	}
 
 	endTest() {
-		if (this.currentTest === null) {
-			throw new Error('endTest called while no test is running');
-		}
+		if (this.currentTest === null) this.errorMessage('endTest called while no test is running');
 
 		this.currentTest.stage = Stage.FINISHED;
 		this.currentTest.endTest();
 		this.popTest();
-	}
-
-	writeAttachment(content, type) {
-		// Because Allure-JS-Commons does not support HTML we can workaround by providing the file extension.
-		const fileExtension = type === ContentType.HTML ? 'html' : undefined;
-		return this.allureRuntime.writeAttachment(content, { contentType: type, fileExtension });
 	}
 
 	pushStep(step) {
@@ -243,144 +215,76 @@ class AllureReporter {
 		this.suites.pop();
 	}
 
-	handleError(error) {
-		if (Array.isArray(error)) {
-			// Test_done event sends an array of arrays containing errors.
-			error = _.flattenDeep(error)[0];
-		}
+	// extractCodeDetails(serializedTestCode) {
+	// 	const docblock = this.extractDocBlock(serializedTestCode);
+	// 	const { pragmas, comments } = parseWithComments(docblock);
 
-		let status = Status.BROKEN;
-		let message = error.name;
-		let trace = error.message;
+	// 	let code = serializedTestCode.replace(docblock, '');
 
-		if (error.matcherResult) {
-			status = Status.FAILED;
-			const matcherMessage = typeof error.matcherResult.message === 'function' ? error.matcherResult.message() : error.matcherResult.message;
+	// 	// Add newline before the first expect()
+	// 	code = code.split(/(expect[\S\s.]*)/g).join('\n');
+	// 	code = prettier.format(code, { parser: 'typescript', plugins: [parser] });
 
-			const [line1, line2, ...restOfMessage] = matcherMessage.split('\n');
+	// 	return { code, comments, pragmas };
+	// }
 
-			message = [line1, line2].join('\n');
-			trace = restOfMessage.join('\n');
-		}
+	// extractDocBlock(contents) {
+	// 	const docblockRe = /^\s*(\/\*\*?(.|\r?\n)*?\*\/)/gm;
 
-		if (!trace) {
-			trace = error.stack;
-		}
+	// 	const match = contents.match(docblockRe);
+	// 	return match ? match[0].trimStart() : '';
+	// }
 
-		if (!message && trace) {
-			message = trace;
-			trace = error.stack.replace(message, 'No stack trace provided');
-		}
+	// setAllureReportPragmas(currentTest, pragmas) {
+	// 	for (let [pragma, value] of Object.entries(pragmas)) {
+	// 		if (value instanceof String && value.includes(',')) {
+	// 			value = value.split(',');
+	// 		}
 
-		if (trace.includes(message)) {
-			trace = trace.replace(message, '');
-		}
+	// 		if (Array.isArray(value)) {
+	// 			value.forEach(v => {
+	// 				this.setAllureLabelsAndLinks(currentTest, pragma, v);
+	// 			});
+	// 		}
 
-		if (!message) {
-			message = 'Error. Expand for more details.';
-			trace = error;
-		}
+	// 		if (!Array.isArray(value)) {
+	// 			this.setAllureLabelsAndLinks(currentTest, pragma, value);
+	// 		}
+	// 	}
+	// }
 
-		return {
-			status,
-			message: stripAnsi(message),
-			trace: stripAnsi(trace)
-		};
-	}
+	// setAllureLabelsAndLinks(currentTest, labelName, value) {
+	// 	switch (labelName) {
+	// 		case 'issue':
+	// 			currentTest.addLink(`${this.jiraUrl}${value}`, value, LinkType.ISSUE);
+	// 			break;
+	// 		case 'tms':
+	// 			currentTest.addLink(`${this.tmsUrl}${value}`, value, LinkType.TMS);
+	// 			break;
+	// 		case 'tag':
+	// 		case 'tags':
+	// 			currentTest.addLabel(LabelName.TAG, value);
+	// 			break;
+	// 		case 'milestone':
+	// 			currentTest.addLabel(labelName, value);
+	// 			currentTest.addLabel('epic', value);
+	// 			break;
+	// 		default:
+	// 			currentTest.addLabel(labelName, value);
+	// 			break;
+	// 	}
+	// }
 
-	extractCodeDetails(serializedTestCode) {
-		const docblock = this.extractDocBlock(serializedTestCode);
-		const { pragmas, comments } = parseWithComments(docblock);
+	// collectTestParentNames(parent) {
+	// 	const testPath = [];
+	// 	do {
+	// 		testPath.unshift(parent.name);
+	// 	} while ((parent = parent.parent));
 
-		let code = serializedTestCode.replace(docblock, '');
-
-		// Add newline before the first expect()
-		code = code.split(/(expect[\S\s.]*)/g).join('\n');
-		code = prettier.format(code, { parser: 'typescript', plugins: [parser] });
-
-		return { code, comments, pragmas };
-	}
-
-	extractDocBlock(contents) {
-		const docblockRe = /^\s*(\/\*\*?(.|\r?\n)*?\*\/)/gm;
-
-		const match = contents.match(docblockRe);
-		return match ? match[0].trimStart() : '';
-	}
-
-	setAllureReportPragmas(currentTest, pragmas) {
-		for (let [pragma, value] of Object.entries(pragmas)) {
-			if (value instanceof String && value.includes(',')) {
-				value = value.split(',');
-			}
-
-			if (Array.isArray(value)) {
-				value.forEach(v => {
-					this.setAllureLabelsAndLinks(currentTest, pragma, v);
-				});
-			}
-
-			if (!Array.isArray(value)) {
-				this.setAllureLabelsAndLinks(currentTest, pragma, value);
-			}
-		}
-	}
-
-	setAllureLabelsAndLinks(currentTest, labelName, value) {
-		switch (labelName) {
-			case 'issue':
-				currentTest.addLink(`${this.jiraUrl}${value}`, value, LinkType.ISSUE);
-				break;
-			case 'tms':
-				currentTest.addLink(`${this.tmsUrl}${value}`, value, LinkType.TMS);
-				break;
-			case 'tag':
-			case 'tags':
-				currentTest.addLabel(LabelName.TAG, value);
-				break;
-			case 'milestone':
-				currentTest.addLabel(labelName, value);
-				currentTest.addLabel('epic', value);
-				break;
-			default:
-				currentTest.addLabel(labelName, value);
-				break;
-		}
-	}
-
-	addSuiteLabelsToTestCase(currentTest, testPath) {
-		const isWindows = os.type() === 'Windows_NT';
-		const pathDelimiter = isWindows ? '\\' : '/';
-		const pathsArray = testPath.split(pathDelimiter);
-
-		const [parentSuite, ...suites] = pathsArray;
-		const subSuite = suites.pop();
-
-		if (parentSuite) {
-			currentTest.addLabel(LabelName.PARENT_SUITE, parentSuite);
-			currentTest.addLabel(LabelName.PACKAGE, parentSuite);
-		}
-
-		if (suites.length > 0) {
-			currentTest.addLabel(LabelName.SUITE, suites.join(' > '));
-		}
-
-		if (subSuite) {
-			currentTest.addLabel(LabelName.SUB_SUITE, subSuite);
-		}
-
-		return currentTest;
-	}
-
-	collectTestParentNames(parent) {
-		const testPath = [];
-		do {
-			testPath.unshift(parent.name);
-		} while ((parent = parent.parent));
-
-		return testPath;
-	}
+	// 	return testPath;
+	// }
 }
 
 // module.exports = AllureReporter;
 exports.default = AllureReporter;
+
