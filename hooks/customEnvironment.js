@@ -1,7 +1,7 @@
 const PlaywrightEnvironment = require('jest-playwright-preset/lib/PlaywrightEnvironment').default;
 const { basename } = require('path');
 const { allureConfig } = require('../reporter/allure.config');
-const { getAllureReporter, initializeTestPath } = require('./customEnvironment.helper');
+const { getAllureReporter, getJestPlaywrightProperties, initializeTestPath } = require('./customEnvironment.helper');
 
 class CustomEnvironment extends PlaywrightEnvironment {
 
@@ -62,7 +62,8 @@ class CustomEnvironment extends PlaywrightEnvironment {
         this.reporter.endHook(event.error || event.hook.asyncError);
         break;
       case 'test_fn_start':
-        this.reporter.startTestCase(event.test, state, this.testPath);
+        var parameters = getJestPlaywrightProperties(this.context["jest-playwright"]);
+        this.reporter.startTestCase(event.test, state, this.testPath, parameters);
         break;
       case 'test_fn_success':
         if (event.test.errors.length > 0) {

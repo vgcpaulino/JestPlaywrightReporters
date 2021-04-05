@@ -19,6 +19,12 @@ function getAllureReporter(allureConfig) {
     });
 }
 
+function getJestPlaywrightProperties(jestPlaywrightContext) {
+    var browserName = jestPlaywrightContext.browserType;
+    var viewPort = jestPlaywrightContext.contextOptions.viewport;
+    return [ { name: 'Browser', value: browserName }, { name: 'View Port', value: `Width: ${viewPort.width} x Height: ${viewPort.height}` } ];
+}
+
 function initializeTestPath(config, context) {
     let testPath = context.testPath || '';
 
@@ -39,5 +45,6 @@ function initializeTestPath(config, context) {
 
 module.exports = {
     getAllureReporter,
+    getJestPlaywrightProperties,
     initializeTestPath
 }

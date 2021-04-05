@@ -1,12 +1,11 @@
 
-const { LabelName, LinkType, Stage, Status, ContentType } = require('allure-js-commons');
+const { Stage, Status, ContentType } = require('allure-js-commons');
 const JestAllureInterface = require('./allureInterface').default;
-
 const defaultCategories = require('./categories.allure').categories;
-const { parseWithComments } = require('jest-docblock');
 
-const prettier = require('prettier/standalone');
-const parser = require('prettier/parser-typescript');
+// const { parseWithComments } = require('jest-docblock');
+// const prettier = require('prettier/standalone');
+// const parser = require('prettier/parser-typescript');
 
 const { AllureReporterHelper } = require('./allureReporter.helper').default;
 
@@ -35,7 +34,7 @@ class AllureReporter extends AllureReporterHelper {
 				this.allureRuntime.writeEnvironmentInfo(env);
 			});
 		}
-		
+
 		this.categories = defaultCategories;
 		this.allureRuntime.writeCategoriesDefinitions(this.categories);
 	}
@@ -131,14 +130,22 @@ class AllureReporter extends AllureReporterHelper {
 		}
 	}
 
-	startTestCase(test, state, testPath) {
+	startTestCase(test, state, testPath, testParameters) {
 		if (this.currentSuite === null) this.errorMessage('The "startTestCase" function was called without a suite running.');
 
 		let currentTest = this.currentSuite.startTest(test.name);
 		currentTest.fullName = test.name;
-		currentTest.historyId = this.getTestHash(testPath, test.name);
-		currentTest.stage = Stage.RUNNING;
 		
+		if (testParameters) {
+			var hashInfo = [testPath, test.name, (testParameters.filter(parameter => parameter.name === 'Browser'))[0].value, (testParameters.filter(parameter => parameter.name === 'View Port'))[0].value]
+			currentTest.historyId = this.getTestHash2(hashInfo);
+		} else {
+			// currentTest.historyId = this.getTestHash(testPath, test.name);
+			currentTest.historyId = this.getTestHash2([testPath, test.name]);
+		}
+		
+		currentTest.stage = Stage.RUNNING;
+
 		// TODO: Add conditional based on configuration file;
 		if (test.fn) {
 			var file = this.writeAttachment(this.allureRuntime, test.fn.toString(), ContentType.TEXT);
@@ -147,11 +154,17 @@ class AllureReporter extends AllureReporterHelper {
 
 		// Adds the labels in the AllureTest object;	
 		var suiteGroup = {
-			subSuite:  test.parent.name,
+			subSuite: test.parent.name,
 			suiteName: (test.parent.parent.name != 'ROOT_DESCRIBE_BLOCK') ? test.parent.parent.name : '',
 			parentSuite: (test.parent.parent.parent) ? ((test.parent.parent.parent.name != 'ROOT_DESCRIBE_BLOCK') ? test.parent.parent.parent.name : '') : ''
 		}
 		currentTest = this.addSuiteLabelsToAllureTest(currentTest, suiteGroup, testPath);
+
+		if (testParameters) {
+			testParameters.forEach(parameter => {
+				currentTest.addParameter(parameter.name, parameter.value);
+			});
+		}
 		
 		// Add the AllureTest in the test list;
 		this.pushTest(currentTest);

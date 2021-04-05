@@ -3,9 +3,8 @@ var browserTypes = ['chromium', 'firefox', 'webkit'];
 var viewPorts = [{ width: 1920, height: 1080 }, { width: 3840, height: 2160 }];
 var headlessExecution = true;
 
-var browserTypes = ['chromium'];
-var viewPorts = [{ width: 1920, height: 1080 }];
-
+// var browserTypes = ['chromium'];
+// var viewPorts = [{ width: 1920, height: 1080 }];
 
 var environments = [];
 browserTypes.forEach(browser => {

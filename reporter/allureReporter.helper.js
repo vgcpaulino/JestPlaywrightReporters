@@ -23,7 +23,7 @@ class AllureReporterHelper {
      * @param {string} testPath 
      * @returns {AllureTest} object with the new labels;
      */
-    addSuiteLabelsToAllureTest(currentTest, suiteGroup = {subSuite: '', suiteName: '', parentSuite: ''},  testPath) { 
+    addSuiteLabelsToAllureTest(currentTest, suiteGroup = { subSuite: '', suiteName: '', parentSuite: '' }, testPath) {
         // Add labels to the "Suits" group;
         if (suiteGroup.parentSuite) currentTest.addLabel(LabelName.PARENT_SUITE, suiteGroup.parentSuite);
         if (suiteGroup.suiteName) currentTest.addLabel(LabelName.SUITE, suiteGroup.suiteName);
@@ -57,6 +57,19 @@ class AllureReporterHelper {
     getTestHash(testFilePath, testName) {
         var hash = createHash('md5')
             .update(testFilePath + '.' + testName)
+            .digest('hex');
+        return hash;
+    }
+
+    /**
+     * @param {string} testFilePath 
+     * @param {Array.<string>} testName 
+     * @returns {string} hash
+     */
+    getTestHash2(hashInfo) {
+        var strHashInfo = hashInfo.join('.');
+        var hash = createHash('md5')
+            .update(strHashInfo)
             .digest('hex');
         return hash;
     }
