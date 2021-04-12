@@ -1,4 +1,5 @@
 module.exports = {
+    globalTeardown: './hooks/globalTeardown.js',
     preset: 'jest-playwright-preset',
     reporters: ['default'],
     // setupFiles: ['./hooks/jestSetup.js'],

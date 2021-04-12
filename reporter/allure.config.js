@@ -6,7 +6,9 @@ const allureConfig = {
     environmentInfo: '',
     categories: '',
     //
-    addTestCode: true
+    addTestCode: true,
+    generateAfterFinish: true,
+    zipAfterFinish: true
 }
 
 module.exports = {

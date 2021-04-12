@@ -27,12 +27,9 @@ class AllureReporter extends AllureReporterHelper {
 		this.jiraUrl = jiraUrl;
 		this.tmsUrl = tmsUrl;
 
-		// TODO: Find another way to write the environment file, it does not accept arrays. So the overwrite the file.;
 		if (environmentInfo) {
-			var allEnvironments = this.generateEnvironmentObjectsArray(environmentInfo);
-			allEnvironments.forEach(env => {
-				this.allureRuntime.writeEnvironmentInfo(env);
-			});
+			var allEnvironments = this.generateEnvironmentString(environmentInfo);
+			this.writeEnvironmentFile(allEnvironments);
 		}
 
 		this.categories = defaultCategories;

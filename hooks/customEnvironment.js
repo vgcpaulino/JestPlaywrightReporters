@@ -13,7 +13,6 @@ class CustomEnvironment extends PlaywrightEnvironment {
     this.testFileName = basename(this.testPath);
 
     allureConfig.environmentInfo = config.testEnvironmentOptions["jest-playwright"].browsers;
-    // allureConfig.environmentInfo = parsedEnvironments;
     this.reporter = getAllureReporter(allureConfig);
     this.global.allure = this.reporter.getImplementation();
   }

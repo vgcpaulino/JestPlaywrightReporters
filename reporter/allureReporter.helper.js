@@ -131,13 +131,20 @@ class AllureReporterHelper {
         return this.allureRuntime.writeAttachment(content, { contentType: type, fileExtension });
     }
 
-    generateEnvironmentObjectsArray(arrayWithEnvironments) {
-        var allEnvironments = [];
+    generateEnvironmentString(arrayWithEnvironments) {
+        var allEnvironments = '';
+        var index = 0;
         arrayWithEnvironments.forEach(env => {
-            var result = new createObject(env.displayName, `Headless: ${env.launchOptions.headless} || View Port: ${env.contextOptions.viewport.width} X ${env.contextOptions.viewport.height}`);
-            allEnvironments.push(result);
+            // var result = new createObject(env.displayName, `Headless: ${env.launchOptions.headless} || View Port: ${env.contextOptions.viewport.width} X ${env.contextOptions.viewport.height}`);
+            var result = `${index++}-${env.displayName}=Headless: ${env.launchOptions.headless} || View Port: ${env.contextOptions.viewport.width} X ${env.contextOptions.viewport.height}`;
+            allEnvironments += result + '\n';
         });
         return allEnvironments;
+    }
+
+    writeEnvironmentFile(data) {
+        const fs = require('fs');
+        fs.writeFileSync('./allure-results/environment.properties', data);
     }
 
 }
